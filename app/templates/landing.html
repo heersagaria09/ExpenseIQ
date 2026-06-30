@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    /* CRITICAL: Set theme INSTANTLY before ANY rendering */
+    (function() {
+      try {
+        var theme = localStorage.getItem('expenseiq_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch(e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ExpenseIQ — AI-Powered Personal Finance</title>
+  <style>
+    /* CRITICAL: Pure CSS solution - no flash ever */
+    html, body, .landing-body {
+      background-color: #020817 !important;
+      margin: 0;
+      padding: 0;
+    }
+    html[data-theme="light"],
+    html[data-theme="light"] body,
+    html[data-theme="light"] .landing-body {
+      background-color: #f8fafc !important;
+    }
+  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet"/>
+  <link href="/static/css/main.css" rel="stylesheet"/>
+  <link href="/static/css/landing.css" rel="stylesheet"/>
+</head>
+<body class="landing-body">
+
+<!-- Navbar -->
+<nav class="landing-nav" id="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="8" fill="var(--accent)"/>
+        <rect x="6" y="18" width="4" height="8" rx="1" fill="white"/>
+        <rect x="14" y="12" width="4" height="14" rx="1" fill="white"/>
+        <rect x="22" y="6" width="4" height="20" rx="1" fill="white"/>
+      </svg>
+      <span class="nav-brand">ExpenseIQ</span>
+    </a>
+    <div class="nav-links d-none d-lg-flex">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+        <svg class="dark-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="light-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <a href="/login" class="btn-login">Log in</a>
+      <a href="/signup" class="btn-signup">Get Started</a>
+    </div>
+    <button class="mobile-menu-btn d-lg-none" onclick="toggleMobileMenu()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="mobile-nav" id="mobileNav">
+    <a href="#features" onclick="toggleMobileMenu()">Features</a>
+    <a href="#how-it-works" onclick="toggleMobileMenu()">How It Works</a>
+    <a href="#about" onclick="toggleMobileMenu()">About</a>
+    <a href="#contact" onclick="toggleMobileMenu()">Contact</a>
+    <a href="/login" class="btn-login">Log in</a>
+    <a href="/signup" class="btn-signup">Get Started</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero-section">
+  <div class="hero-content">
+    <div class="hero-text" data-aos="fade-right">
+      <h1>Track Expenses.<br/>Save Smarter.<br/><span class="text-green">Achieve More.</span></h1>
+      <p>ExpenseIQ helps you track, analyze, and optimize your finances with AI-powered insights.</p>
+      <div class="hero-btns">
+        <a href="/signup" class="btn-hero-primary">Get Started</a>
+        <a href="#how-it-works" class="btn-hero-outline">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Watch Demo
+        </a>
+      </div>
+      <div class="hero-badges">
+        <div class="hero-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          AI-Powered Insights
+        </div>
+        <div class="hero-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Bank-Level Security
+        </div>
+        <div class="hero-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          100% Private & Secure
+        </div>
+      </div>
+    </div>
+    <div class="hero-preview" data-aos="fade-left">
+      <div class="dashboard-preview">
+        <div class="preview-header">
+          <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#22c55e"/><rect x="6" y="18" width="4" height="8" rx="1" fill="white"/><rect x="14" y="12" width="4" height="14" rx="1" fill="white"/><rect x="22" y="6" width="4" height="20" rx="1" fill="white"/></svg>
+          <span>Overview</span>
+          <div class="preview-actions">
+            <span class="preview-dot"></span>
+            <span class="preview-dot"></span>
+            <span class="preview-dot"></span>
+          </div>
+        </div>
+        <div class="preview-stats">
+          <div class="preview-stat">
+            <div class="preview-stat-label">Total Balance</div>
+            <div class="preview-stat-value">₹2,45,680</div>
+            <div class="preview-stat-change up">+12.5%</div>
+          </div>
+          <div class="preview-stat">
+            <div class="preview-stat-label">Monthly Spending</div>
+            <div class="preview-stat-value">₹24,560</div>
+            <div class="preview-stat-change down">-8.3%</div>
+          </div>
+          <div class="preview-stat">
+            <div class="preview-stat-label">Cash Flow</div>
+            <div class="preview-stat-value">₹18,500</div>
+            <div class="preview-stat-change up">This Month</div>
+          </div>
+        </div>
+        <div class="preview-chart">
+          <div class="preview-chart-bars">
+            <div class="bar" style="height:40%"></div>
+            <div class="bar" style="height:65%"></div>
+            <div class="bar" style="height:45%"></div>
+            <div class="bar" style="height:80%"></div>
+            <div class="bar active" style="height:60%"></div>
+          </div>
+          <div class="preview-chart-labels">
+            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span>
+          </div>
+        </div>
+        <div class="preview-bottom">
+          <div class="preview-cat">
+            <div class="preview-cat-title">Spending by Category</div>
+            <div class="preview-donut">
+              <div class="donut-ring"></div>
+              <div class="donut-labels">
+                <div><span class="dot" style="background:#f59e0b"></span>Food 34%</div>
+                <div><span class="dot" style="background:#3b82f6"></span>Transport 20%</div>
+                <div><span class="dot" style="background:#8b5cf6"></span>Shopping 17%</div>
+                <div><span class="dot" style="background:#ef4444"></span>Bills 15%</div>
+                <div><span class="dot" style="background:#6b7280"></span>Others 14%</div>
+              </div>
+            </div>
+          </div>
+          <div class="preview-goal">
+            <div class="preview-cat-title">Savings Goal</div>
+            <div class="preview-goal-amount">₹18,500 <small>of ₹30,000</small></div>
+            <div class="preview-progress">
+              <div class="preview-progress-bar" style="width:62%"></div>
+            </div>
+            <div class="preview-goal-pct">62%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section class="about-section" id="about">
+  <div class="container-custom">
+    <div class="about-grid">
+      <div class="about-left" data-aos="fade-right">
+        <div class="section-badge">About ExpenseIQ</div>
+        <h2>About <span class="text-green">ExpenseIQ</span></h2>
+        <p>ExpenseIQ is an AI-powered personal finance platform that helps you track expenses, manage budgets, monitor subscriptions, and achieve financial goals through intelligent insights.</p>
+        <p>Our mission is to make financial management simple, intelligent, and accessible for everyone.</p>
+        <a href="/signup" class="btn-hero-outline mt-3">Learn More About Us</a>
+      </div>
+      <div class="about-right" data-aos="fade-left">
+        <div class="stats-row">
+          <div class="about-stat">
+            <div class="about-stat-icon blue">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="about-stat-num">15,000+</div>
+            <div class="about-stat-label">Active Users</div>
+          </div>
+          <div class="about-stat">
+            <div class="about-stat-icon green">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="about-stat-num">₹12 Crore+</div>
+            <div class="about-stat-label">Expenses Tracked</div>
+          </div>
+          <div class="about-stat">
+            <div class="about-stat-icon yellow">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
+            <div class="about-stat-num">98%</div>
+            <div class="about-stat-label">AI Accuracy</div>
+          </div>
+          <div class="about-stat">
+            <div class="about-stat-icon purple">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="about-stat-num">4.9★</div>
+            <div class="about-stat-label">User Satisfaction</div>
+          </div>
+        </div>
+        <div class="core-values">
+          <h4>Our Core Values</h4>
+          <div class="values-row">
+            <div class="value-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Simplicity</div>
+            <div class="value-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Security</div>
+            <div class="value-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Transparency</div>
+            <div class="value-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Innovation</div>
+            <div class="value-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg> Financial Growth</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features-section" id="features">
+  <div class="container-custom">
+    <div class="section-header" data-aos="fade-up">
+      <h2>Powerful Features for Smarter Financial Management</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+        <div class="feature-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <h4>Expense Tracking</h4>
+        <p>Track daily expenses with smart categorization and receipt scanning.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="60">
+        <div class="feature-icon blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <h4>Income Management</h4>
+        <p>Manage multiple income sources and monitor your earnings.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="120">
+        <div class="feature-icon purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <h4>Advanced Analytics</h4>
+        <p>Beautiful charts and insights to understand your finances.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="180">
+        <div class="feature-icon yellow"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+        <h4>Savings Goals</h4>
+        <p>Set goals, track progress, and achieve your financial milestones.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+        <div class="feature-icon red"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+        <h4>Subscription Tracking</h4>
+        <p>Monitor subscriptions, get renewal alerts, and save more.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="60">
+        <div class="feature-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        <h4>AI Financial Coach</h4>
+        <p>Get personalized tips, budget suggestions, and smart recommendations.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="120">
+        <div class="feature-icon yellow"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <h4>Smart Notifications</h4>
+        <p>Stay updated with budget alerts, reminders, and important updates.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="180">
+        <div class="feature-icon blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9l9-6 9 6"/><path d="M9 22V12h6v10"/></svg></div>
+        <h4>Bank Statement Import</h4>
+        <p>Import statements, auto categorize transactions, and save time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-section" id="how-it-works">
+  <div class="container-custom">
+    <div class="section-header" data-aos="fade-up">
+      <h2>How It Works</h2>
+      <p>Manage your finances in four simple steps</p>
+    </div>
+    <div class="steps-row" data-aos="fade-up">
+      <div class="step-item">
+        <div class="step-number">1</div>
+        <div class="step-icon green">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <h4>Add Your Data</h4>
+        <p>Add expenses, income or import bank statements.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item">
+        <div class="step-number">2</div>
+        <div class="step-icon blue">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h4>Analyze Spending</h4>
+        <p>Visualize your spending patterns with smart analytics.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item">
+        <div class="step-number">3</div>
+        <div class="step-icon purple">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <h4>Get AI Insights</h4>
+        <p>Receive personalized recommendations from AI Coach.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item">
+        <div class="step-number">4</div>
+        <div class="step-icon yellow">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+        </div>
+        <h4>Achieve Goals</h4>
+        <p>Track your goals and improve your financial health.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section class="contact-section" id="contact">
+  <div class="container-custom">
+    <div class="contact-grid">
+      <div class="contact-left" data-aos="fade-right">
+        <h2>Get In Touch</h2>
+        <p>Have questions or feedback? We'd love to hear from you.</p>
+        <div class="contact-info">
+          <div class="contact-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            support@expenseiq.com
+          </div>
+          <div class="contact-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            www.expenseiq.com
+          </div>
+          <div class="contact-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            India
+          </div>
+          <div class="contact-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Mon – Fri: 9:00 AM – 6:00 PM IST
+          </div>
+        </div>
+        <div class="social-links">
+          <span>Connect With Us</span>
+          <div class="social-row">
+            <a href="#" class="social-btn">in</a>
+            <a href="#" class="social-btn">GH</a>
+            <a href="#" class="social-btn">tw</a>
+            <a href="#" class="social-btn">ig</a>
+          </div>
+        </div>
+      </div>
+      <div class="contact-right" data-aos="fade-left">
+        <form class="contact-form" id="contactForm" onsubmit="submitContact(event)">
+          <div class="form-row">
+            <input type="text" placeholder="Your Name" class="form-control" required/>
+            <input type="email" placeholder="Email Address" class="form-control" required/>
+          </div>
+          <input type="text" placeholder="Subject" class="form-control" required/>
+          <textarea placeholder="Your Message" rows="5" class="form-control" required></textarea>
+          <button type="submit" class="btn-hero-primary w-100">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send Message
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="landing-footer">
+  <div class="container-custom">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo mb-2">
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#22c55e"/><rect x="6" y="18" width="4" height="8" rx="1" fill="white"/><rect x="14" y="12" width="4" height="14" rx="1" fill="white"/><rect x="22" y="6" width="4" height="20" rx="1" fill="white"/></svg>
+          Expense<span>IQ</span>
+        </div>
+        <p>Track. Save. Achieve More.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <a href="#features">Features</a>
+        <a href="/ai-coach">AI Coach</a>
+        <a href="#">Pricing</a>
+        <a href="#">Roadmap</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="#about">About Us</a>
+        <a href="#">Blog</a>
+        <a href="#">Careers</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Refund Policy</a>
+      </div>
+      <div class="footer-col">
+        <h5>Stay Updated</h5>
+        <p style="font-size:13px;color:var(--text-muted)">Subscribe to our newsletter</p>
+        <div class="footer-input-row">
+          <input type="email" placeholder="Enter your email" class="form-control"/>
+          <button class="btn-signup" style="padding:10px 16px;">→</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024 ExpenseIQ. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+
+<div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="/static/js/theme.js"></script>
+<script src="/static/js/main.js"></script>
+<script>
+  AOS.init({ duration: 700, once: true, offset: 80 });
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+
+  // Navbar scroll effect
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  function toggleMobileMenu() {
+    document.getElementById('mobileNav').classList.toggle('open');
+  }
+
+  function submitContact(e) {
+    e.preventDefault();
+    showToast('Message sent! We\'ll get back to you soon.', 'success');
+    e.target.reset();
+  }
+</script>
+</body>
+</html>

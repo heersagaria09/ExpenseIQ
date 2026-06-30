@@ -1,0 +1,178 @@
+{% extends "app_base.html" %}
+{% block title %}Income{% endblock %}
+{% block page_title %}Income{% endblock %}
+{% block page_subtitle %}Manage all your income sources{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+  <div class="d-flex gap-2 flex-wrap">
+    <input type="text" id="searchInc" class="form-control" placeholder="Search income..." style="width:220px;" oninput="loadIncomes()"/>
+    <select class="form-select" id="filterSource" style="width:180px;" onchange="loadIncomes()">
+      <option value="">All Sources</option>
+      {% for src in sources %}<option value="{{ src }}">{{ src }}</option>{% endfor %}
+    </select>
+  </div>
+  <button class="btn-primary-custom" onclick="openIncomeModal()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Income
+  </button>
+</div>
+
+<div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+  <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+    <span class="section-card-title">Income Records</span>
+    <span class="badge-success" id="incomeCount">Loading...</span>
+  </div>
+  <div class="section-card-body" style="padding:0;background:var(--card-bg);">
+    <div id="incomeTableContainer"><div class="loading-spinner"></div></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="incomeModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);">
+      <div class="modal-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+        <h5 class="modal-title" id="incomeModalTitle" style="color:var(--text-primary);">Add Income</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" style="color:var(--text-muted);"></button>
+      </div>
+      <div class="modal-body" style="background:var(--card-bg);">
+        <input type="hidden" id="editIncomeId"/>
+        <div class="mb-3">
+          <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Title *</label>
+          <input type="text" id="incTitle" class="form-control" placeholder="Income title" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Amount (₹) *</label>
+            <input type="number" id="incAmount" class="form-control" placeholder="0.00" step="0.01" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+          </div>
+          <div class="col-6">
+            <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Date *</label>
+            <input type="date" id="incDate" class="form-control" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Source *</label>
+          <select id="incSource" class="form-select" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);">
+            {% for src in sources %}<option value="{{ src }}">{{ src }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Notes</label>
+          <textarea id="incNotes" class="form-control" rows="2" placeholder="Optional notes" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"></textarea>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="incRecurring"/>
+          <label class="form-check-label" style="color:var(--text-secondary);font-size:13px;">Recurring income</label>
+        </div>
+      </div>
+      <div class="modal-footer" style="background:var(--card-bg);border-top:1px solid var(--border-color);">
+        <button class="btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn-primary-custom" onclick="saveIncome()">Save Income</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let incomeModal;
+document.addEventListener('DOMContentLoaded', () => {
+  incomeModal = new bootstrap.Modal(document.getElementById('incomeModal'));
+  document.getElementById('incDate').value = new Date().toISOString().split('T')[0];
+  loadIncomes();
+});
+
+async function loadIncomes() {
+  const search = document.getElementById('searchInc').value;
+  const source = document.getElementById('filterSource').value;
+  let url = `/api/incomes?page=1&per_page=20`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (source) url += `&source=${encodeURIComponent(source)}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.success) renderIncomes(data.data);
+  } catch(e) { showToast('Failed to load incomes', 'error'); }
+}
+
+function renderIncomes(data) {
+  document.getElementById('incomeCount').textContent = `${data.total} total`;
+  const container = document.getElementById('incomeTableContainer');
+  if (!data.items.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div><p>No income records yet</p><button class="btn-primary-custom mt-3" onclick="openIncomeModal()">Add First Income</button></div>`;
+    return;
+  }
+  const srcColors = {'Salary':'#10b981','Freelance':'#3b82f6','Business':'#8b5cf6','Investments':'#f59e0b','Rental Income':'#06b6d4','Bonus':'#ec4899','Others':'#6b7280'};
+  container.innerHTML = `<table class="table-custom"><thead><tr><th>Title</th><th>Source</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead><tbody>
+    ${data.items.map(i => `<tr>
+      <td><div style="font-weight:600;color:var(--text-primary)">${i.title}</div><div style="font-size:12px;color:var(--text-muted)">${i.notes||''}</div></td>
+      <td><span style="background:${srcColors[i.source]||'#6b7280'}22;color:${srcColors[i.source]||'#6b7280'};padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600">${i.source}</span></td>
+      <td style="font-size:13px">${i.date_str||''}</td>
+      <td><span style="font-weight:700;color:var(--accent)">+₹${i.amount.toLocaleString('en-IN',{minimumFractionDigits:2})}</span></td>
+      <td><div style="display:flex;gap:6px">
+        <button onclick="editIncome('${i._id}')" style="background:rgba(59,130,246,0.1);border:none;color:#3b82f6;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer">Edit</button>
+        <button onclick="deleteIncome('${i._id}')" style="background:rgba(239,68,68,0.1);border:none;color:#ef4444;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer">Delete</button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function openIncomeModal(editing=false) {
+  if (!editing) {
+    document.getElementById('incomeModalTitle').textContent = 'Add Income';
+    document.getElementById('editIncomeId').value = '';
+    document.getElementById('incTitle').value = '';
+    document.getElementById('incAmount').value = '';
+    document.getElementById('incDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('incNotes').value = '';
+    document.getElementById('incRecurring').checked = false;
+  }
+  incomeModal.show();
+}
+
+async function editIncome(id) {
+  const res = await fetch(`/api/incomes/${id}`);
+  const data = await res.json();
+  if (data.success) {
+    const i = data.data;
+    document.getElementById('incomeModalTitle').textContent = 'Edit Income';
+    document.getElementById('editIncomeId').value = i._id;
+    document.getElementById('incTitle').value = i.title;
+    document.getElementById('incAmount').value = i.amount;
+    document.getElementById('incDate').value = i.date_input || '';
+    document.getElementById('incSource').value = i.source;
+    document.getElementById('incNotes').value = i.notes || '';
+    openIncomeModal(true);
+  }
+}
+
+async function saveIncome() {
+  const id = document.getElementById('editIncomeId').value;
+  const body = {
+    title: document.getElementById('incTitle').value.trim(),
+    amount: parseFloat(document.getElementById('incAmount').value),
+    date: document.getElementById('incDate').value,
+    source: document.getElementById('incSource').value,
+    notes: document.getElementById('incNotes').value.trim(),
+    is_recurring: document.getElementById('incRecurring').checked,
+  };
+  if (!body.title || !body.amount) return showToast('Title and amount are required', 'error');
+  const url = id ? `/api/incomes/${id}` : '/api/incomes';
+  const method = id ? 'PUT' : 'POST';
+  const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (data.success) { showToast(data.message, 'success'); incomeModal.hide(); loadIncomes(); }
+  else showToast(data.message||'Failed', 'error');
+}
+
+async function deleteIncome(id) {
+  if (!confirm('Delete this income record?')) return;
+  const res = await fetch(`/api/incomes/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.success) { showToast('Deleted', 'success'); loadIncomes(); }
+}
+</script>
+{% endblock %}

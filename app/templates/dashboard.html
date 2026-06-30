@@ -1,0 +1,237 @@
+{% extends "app_base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Your financial overview at a glance{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card" data-aos="fade-up" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="stat-card-header">
+      <span class="stat-label" style="color:var(--text-muted);">Total Balance</span>
+      <div class="stat-card-icon green" style="background:rgba(16,185,129,0.1);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+    </div>
+    <div class="stat-number" style="color:var(--text-primary);">₹{{ "{:,.0f}".format(data.total_balance) }}</div>
+    <div class="stat-change {% if data.income_change >= 0 %}up{% else %}down{% endif %}">
+      {% if data.income_change >= 0 %}▲{% else %}▼{% endif %} {{ data.income_change|abs }}% vs last month
+    </div>
+  </div>
+  <div class="stat-card" data-aos="fade-up" data-aos-delay="60" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="stat-card-header">
+      <span class="stat-label" style="color:var(--text-muted);">Monthly Income</span>
+      <div class="stat-card-icon blue" style="background:rgba(59,130,246,0.1);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+    </div>
+    <div class="stat-number" style="color:var(--text-primary);">₹{{ "{:,.0f}".format(data.monthly_income) }}</div>
+    <div class="stat-change {% if data.income_change >= 0 %}up{% else %}down{% endif %}">
+      {% if data.income_change >= 0 %}▲{% else %}▼{% endif %} {{ data.income_change|abs }}% vs last month
+    </div>
+  </div>
+  <div class="stat-card" data-aos="fade-up" data-aos-delay="120" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="stat-card-header">
+      <span class="stat-label" style="color:var(--text-muted);">Monthly Expenses</span>
+      <div class="stat-card-icon red" style="background:rgba(239,68,68,0.1);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
+    </div>
+    <div class="stat-number" style="color:var(--text-primary);">₹{{ "{:,.0f}".format(data.monthly_expenses) }}</div>
+    <div class="stat-change {% if data.expense_change <= 0 %}up{% else %}down{% endif %}">
+      {% if data.expense_change <= 0 %}▼{% else %}▲{% endif %} {{ data.expense_change|abs }}% vs last month
+    </div>
+  </div>
+  <div class="stat-card" data-aos="fade-up" data-aos-delay="180" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="stat-card-header">
+      <span class="stat-label" style="color:var(--text-muted);">Savings</span>
+      <div class="stat-card-icon purple" style="background:rgba(139,92,246,0.1);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+    </div>
+    <div class="stat-number" style="color:var(--text-primary);">₹{{ "{:,.0f}".format(data.savings) }}</div>
+    <div class="stat-label mt-1" style="color:var(--text-muted);">This month</div>
+  </div>
+</div>
+
+<div class="content-grid content-grid-2 mb-4">
+  <!-- Cash Flow Chart -->
+  <div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+      <span class="section-card-title">Cash Flow ({{ now().year }})</span>
+      <span class="badge-success">Live</span>
+    </div>
+    <div class="section-card-body" style="background:var(--card-bg);">
+      {% if data.monthly_expense_data and data.monthly_expense_data | sum > 0 %}
+      <div class="chart-wrapper">
+        <canvas id="cashflowChart"></canvas>
+      </div>
+      {% else %}
+      <div class="empty-state" style="background:var(--card-bg);">
+        <div class="empty-icon" style="background:var(--bg-hover);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <p style="color:var(--text-muted);">Add income & expenses to see cash flow</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Category Breakdown -->
+  <div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+      <span class="section-card-title">Spending by Category</span>
+    </div>
+    <div class="section-card-body" style="background:var(--card-bg);">
+      {% if data.category_breakdown %}
+      <div class="chart-wrapper-sm">
+        <canvas id="categoryChart"></canvas>
+      </div>
+      <div class="mt-3">
+        {% for cat in data.category_breakdown[:5] %}
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <div style="width:10px;height:10px;border-radius:2px;background:var(--cat-color-{{ loop.index }})"></div>
+            <span style="font-size:13px;color:var(--text-secondary)">{{ cat._id }}</span>
+          </div>
+          <span style="font-size:13px;font-weight:600;color:var(--text-primary)">₹{{ "{:,.0f}".format(cat.total) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state" style="background:var(--card-bg);">
+        <div class="empty-icon" style="background:var(--bg-hover);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div>
+        <p style="color:var(--text-muted);">No expense data yet</p>
+        <a href="/expenses" class="btn-primary-custom mt-2" style="font-size:13px;padding:8px 16px;">Add First Expense</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="content-grid content-grid-2 mb-4">
+  <!-- Recent Expenses -->
+  <div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+      <span class="section-card-title">Recent Expenses</span>
+      <a href="/expenses" style="font-size:13px;color:var(--accent)">View All →</a>
+    </div>
+    <div class="section-card-body" style="padding-top:8px;background:var(--card-bg);">
+      {% if data.recent_expenses %}
+        {% for exp in data.recent_expenses %}
+        <div class="txn-row" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+          <div class="txn-icon" style="background:rgba(245,158,11,0.1);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          </div>
+          <div class="txn-info">
+            <div class="txn-title" style="color:var(--text-primary);">{{ exp.title }}</div>
+            <div class="txn-meta" style="color:var(--text-muted);">{{ exp.category }} • {{ exp.date_str }}</div>
+          </div>
+          <div class="txn-amount debit" style="color:var(--danger);">-₹{{ "{:,.0f}".format(exp.amount) }}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state" style="padding:30px 20px;background:var(--card-bg);">
+        <p style="color:var(--text-muted);font-size:14px;">No expenses recorded yet</p>
+        <a href="/expenses" class="btn-primary-custom mt-2" style="font-size:13px;padding:8px 16px;">Add Expense</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Financial Health + Quick Stats -->
+  <div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+      <span class="section-card-title">Financial Health</span>
+      <span class="badge-{% if data.health_score >= 70 %}success{% elif data.health_score >= 40 %}warning{% else %}danger{% endif %}">
+        {% if data.health_score >= 70 %}Good{% elif data.health_score >= 40 %}Fair{% else %}Poor{% endif %}
+      </span>
+    </div>
+    <div class="section-card-body" style="background:var(--card-bg);">
+      <div class="d-flex align-items-center gap-4 mb-4">
+        <div class="health-gauge">
+          <svg viewBox="0 0 100 60" width="130" height="80">
+            <path d="M 10 55 A 45 45 0 0 1 90 55" fill="none" stroke="var(--border-color)" stroke-width="10" stroke-linecap="round"/>
+            <path d="M 10 55 A 45 45 0 0 1 90 55" fill="none" stroke="{% if data.health_score >= 70 %}var(--accent){% elif data.health_score >= 40 %}var(--warning){% else %}var(--danger){% endif %}"
+                  stroke-width="10" stroke-linecap="round"
+                  stroke-dasharray="{{ data.health_score * 1.41 }} 141"
+                  transform="rotate(0)"/>
+            <text x="50" y="52" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text-primary)">{{ data.health_score }}</text>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-number" style="font-size:48px;color:var(--text-primary);">{{ data.health_score }}</div>
+          <div class="stat-label" style="color:var(--text-muted);">out of 100</div>
+        </div>
+      </div>
+      <div style="display:grid;gap:10px;">
+        <div class="d-flex justify-content-between align-items-center">
+          <span style="font-size:13px;color:var(--text-muted)">Subscriptions/mo</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text-primary)">₹{{ "{:,.0f}".format(data.subscription_cost) }}</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span style="font-size:13px;color:var(--text-muted)">Active Budgets</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text-primary)">{{ data.budget_count }}</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span style="font-size:13px;color:var(--text-muted)">Active Goals</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text-primary)">{{ data.goal_count }}</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span style="font-size:13px;color:var(--text-muted)">Top Expense</span>
+          <span class="badge-warning">{{ data.top_category }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+  <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+    <span class="section-card-title">Quick Actions</span>
+  </div>
+  <div class="section-card-body" style="background:var(--card-bg);">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <a href="/expenses" class="btn-primary-custom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Expense
+      </a>
+      <a href="/income" class="btn-outline-custom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Income
+      </a>
+      <a href="/analytics" class="btn-outline-custom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        View Analytics
+      </a>
+      <a href="/ai-coach" class="btn-outline-custom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        AI Coach
+      </a>
+      <a href="/bank-statements" class="btn-outline-custom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+        Bank Statements
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+{% if data.monthly_expense_data and data.monthly_expense_data|sum > 0 %}
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const expData = {{ data.monthly_expense_data | tojson }};
+const incData = {{ data.monthly_income_data | tojson }};
+createLineChart(
+  document.getElementById('cashflowChart').getContext('2d'),
+  months,
+  [
+    { label: 'Income', data: incData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)', fill: true, tension: 0.4 },
+    { label: 'Expenses', data: expData, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', fill: true, tension: 0.4 }
+  ]
+);
+{% endif %}
+
+{% if data.category_breakdown %}
+const catData = {{ data.category_breakdown | tojson }};
+const catLabels = catData.map(c => c._id);
+const catValues = catData.map(c => c.total);
+const catColors = ['#f59e0b','#3b82f6','#8b5cf6','#ef4444','#10b981','#ec4899','#06b6d4','#6b7280'];
+createDoughnutChart(
+  document.getElementById('categoryChart').getContext('2d'),
+  catLabels, catValues, catColors
+);
+{% endif %}
+</script>
+{% endblock %}

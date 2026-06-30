@@ -1,0 +1,171 @@
+{% extends "app_base.html" %}
+{% block title %}Subscriptions{% endblock %}
+{% block page_title %}Subscriptions{% endblock %}
+{% block page_subtitle %}Track and manage your subscriptions{% endblock %}
+
+{% block content %}
+<div class="stats-grid mb-4">
+  <div class="stat-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);"><div class="stat-card-header"><span class="stat-label" style="color:var(--text-muted);">Active Subscriptions</span><div class="stat-card-icon green" style="background:rgba(16,185,129,0.1);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div></div><div class="stat-number" style="color:var(--text-primary);">{{ active_count }}</div></div>
+  <div class="stat-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);"><div class="stat-card-header"><span class="stat-label" style="color:var(--text-muted);">Monthly Cost</span><div class="stat-card-icon red" style="background:rgba(239,68,68,0.1);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="stat-number" style="color:var(--text-primary);">₹{{ "{:,.0f}".format(monthly_cost) }}</div><div class="stat-label mt-1" style="color:var(--text-muted);">Per month</div></div>
+  <div class="stat-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);"><div class="stat-card-header"><span class="stat-label" style="color:var(--text-muted);">Annual Cost</span><div class="stat-card-icon yellow" style="background:rgba(245,158,11,0.1);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div></div><div class="stat-number" style="color:var(--text-primary);">₹{{ "{:,.0f}".format(yearly_cost) }}</div><div class="stat-label mt-1" style="color:var(--text-muted);">Per year</div></div>
+  <div class="stat-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);"><div class="stat-card-header"><span class="stat-label" style="color:var(--text-muted);">Renewals Soon</span><div class="stat-card-icon red" style="background:rgba(239,68,68,0.1);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div></div><div class="stat-number" style="color:var(--text-primary);">{{ renewal_soon|length }}</div><div class="stat-label mt-1" style="color:var(--text-muted);">Renewing in 7 days</div></div>
+</div>
+
+{% if renewal_soon %}
+<div class="section-card mb-4" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);border-color:rgba(245,158,11,0.4);">
+  <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);"><span class="section-card-title">⚠️ Renewals Coming Up</span></div>
+  <div class="section-card-body" style="background:var(--card-bg);padding:12px 20px;">
+    {% for s in renewal_soon %}
+    <div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color:var(--border-color)!important;">
+      <div><div style="font-weight:600;color:var(--text-primary)">{{ s.name }}</div><div style="font-size:12px;color:var(--warning)">Renews {{ s.renewal_str }} ({{ s.days_until_renewal }} days)</div></div>
+      <div style="font-weight:700;color:var(--text-primary)">₹{{ "{:,.0f}".format(s.amount) }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <span class="section-card-title" style="color:var(--text-primary);">All Subscriptions</span>
+  <button class="btn-primary-custom" onclick="openSubModal()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Subscription
+  </button>
+</div>
+
+{% if subscriptions %}
+<div class="content-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+  {% for s in subscriptions %}
+  <div class="stat-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <div style="font-weight:700;font-size:15px;color:var(--text-primary)">{{ s.name }}</div>
+        <div style="font-size:12px;color:var(--text-muted)">{{ s.category }} • {{ s.billing_cycle }}</div>
+      </div>
+      {% if s.renewal_soon %}<span class="badge-warning">Soon</span>
+      {% elif s.is_active %}<span class="badge-success">Active</span>
+      {% else %}<span class="badge-danger">Inactive</span>{% endif %}
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span style="font-size:22px;font-weight:800;color:var(--text-primary)">₹{{ "{:,.0f}".format(s.amount) }}</span>
+      <span style="font-size:12px;color:var(--text-muted)">{{ s.billing_cycle }}</span>
+    </div>
+    {% if s.renewal_str %}
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Renews: {{ s.renewal_str }}</div>
+    {% endif %}
+    <div class="d-flex gap-2">
+      <button onclick="editSub('{{ s._id }}')" style="background:rgba(59,130,246,0.1);border:none;color:#3b82f6;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;flex:1">Edit</button>
+      <button onclick="deleteSub('{{ s._id }}')" style="background:rgba(239,68,68,0.1);border:none;color:#ef4444;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">Delete</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);"><div class="section-card-body" style="background:var(--card-bg);"><div class="empty-state">
+  <div class="empty-icon" style="background:var(--bg-hover);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+  <p style="color:var(--text-muted);">No subscriptions tracked yet</p>
+  <button class="btn-primary-custom mt-3" onclick="openSubModal()">Add First Subscription</button>
+</div></div></div>
+{% endif %}
+
+<!-- Modal -->
+<div class="modal fade" id="subModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);">
+      <div class="modal-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+        <h5 class="modal-title" id="subModalTitle" style="color:var(--text-primary);">Add Subscription</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" style="color:var(--text-muted);"></button>
+      </div>
+      <div class="modal-body" style="background:var(--card-bg);">
+        <input type="hidden" id="editSubId"/>
+        <div class="mb-3">
+          <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Name *</label>
+          <input type="text" id="subName" class="form-control" placeholder="e.g. Netflix, Spotify" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Amount (₹) *</label>
+            <input type="number" id="subAmount" class="form-control" placeholder="0.00" step="0.01" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+          </div>
+          <div class="col-6">
+            <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Billing Cycle</label>
+            <select id="subCycle" class="form-select" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);">
+              {% for cycle in billing_cycles %}<option value="{{ cycle }}">{{ cycle }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Category</label>
+          <select id="subCategory" class="form-select" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);">
+            {% for cat in categories %}<option value="{{ cat }}">{{ cat }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Next Renewal Date</label>
+          <input type="date" id="subRenewal" class="form-control" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+        </div>
+      </div>
+      <div class="modal-footer" style="background:var(--card-bg);border-top:1px solid var(--border-color);">
+        <button class="btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn-primary-custom" onclick="saveSub()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let subModal;
+document.addEventListener('DOMContentLoaded', () => { subModal = new bootstrap.Modal(document.getElementById('subModal')); });
+
+function openSubModal() {
+  document.getElementById('subModalTitle').textContent = 'Add Subscription';
+  document.getElementById('editSubId').value = '';
+  document.getElementById('subName').value = '';
+  document.getElementById('subAmount').value = '';
+  document.getElementById('subRenewal').value = '';
+  subModal.show();
+}
+
+async function editSub(id) {
+  const res = await fetch(`/api/subscriptions`);
+  const data = await res.json();
+  const sub = data.data?.find(s => s._id === id);
+  if (sub) {
+    document.getElementById('subModalTitle').textContent = 'Edit Subscription';
+    document.getElementById('editSubId').value = sub._id;
+    document.getElementById('subName').value = sub.name;
+    document.getElementById('subAmount').value = sub.amount;
+    document.getElementById('subCycle').value = sub.billing_cycle;
+    document.getElementById('subCategory').value = sub.category;
+    subModal.show();
+  }
+}
+
+async function saveSub() {
+  const id = document.getElementById('editSubId').value;
+  const body = {
+    name: document.getElementById('subName').value.trim(),
+    amount: parseFloat(document.getElementById('subAmount').value),
+    billing_cycle: document.getElementById('subCycle').value,
+    category: document.getElementById('subCategory').value,
+    next_renewal: document.getElementById('subRenewal').value,
+  };
+  if (!body.name || !body.amount) return showToast('Name and amount required', 'error');
+  const url = id ? `/api/subscriptions/${id}` : '/api/subscriptions';
+  const method = id ? 'PUT' : 'POST';
+  const res = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (data.success) { showToast(data.message, 'success'); subModal.hide(); setTimeout(() => location.reload(), 800); }
+  else showToast(data.message||'Failed', 'error');
+}
+
+async function deleteSub(id) {
+  if (!confirm('Delete this subscription?')) return;
+  const res = await fetch(`/api/subscriptions/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.success) { showToast('Deleted', 'success'); setTimeout(() => location.reload(), 800); }
+}
+</script>
+{% endblock %}

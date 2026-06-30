@@ -1,0 +1,139 @@
+/* ===== PERMANENT SMOOTH ANIMATIONS FIX ===== */
+
+/* Prevent all white flashes by ensuring backgrounds during transitions */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Bank Statements - Year/Month Accordion */
+.month-list {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  background: var(--bg-card);
+  padding-left: 8px;
+  transition: max-height 0.35s ease-in-out, opacity 0.25s ease, padding 0.25s ease;
+}
+
+.month-list.open {
+  max-height: 800px;
+  opacity: 1;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  background: var(--bg-card);
+}
+
+.year-toggle svg {
+  transition: transform 0.3s ease;
+}
+
+.year-toggle.expanded svg {
+  transform: rotate(90deg);
+}
+
+/* Settings - Section Switching */
+.settings-section,
+.content-section {
+  transition: opacity 0.2s ease, transform 0.2s ease !important;
+  background: var(--bg-primary) !important;
+}
+
+.settings-section.active,
+.content-section.active {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  position: relative !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.settings-section.inactive,
+.settings-section.hidden,
+.content-section.hidden {
+  opacity: 0 !important;
+  transform: translateX(10px) !important;
+  position: absolute !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  background: var(--bg-primary) !important;
+}
+
+/* AI Coach - Message Animations */
+.chat-msg {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  background: transparent !important;
+  transition: opacity 0.3s ease, transform 0.3s ease !important;
+}
+
+.msg-bubble {
+  background: var(--bg-secondary) !important;
+}
+
+.chat-user .msg-bubble {
+  background: rgba(34,197,94,0.15) !important;
+}
+
+#chatMessages {
+  background: var(--bg-card) !important;
+}
+
+/* Accordion Content (Generic) */
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  background: var(--bg-card);
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+}
+
+.accordion-content.open {
+  max-height: 1000px;
+  opacity: 1;
+  background: var(--bg-card);
+}
+
+/* Smooth transitions for all cards */
+.section-card {
+  background: var(--bg-card);
+  transition: all 0.2s ease;
+}
+
+.section-card-body {
+  background: transparent;
+}
+
+/* Year groups background */
+.year-group {
+  background: var(--bg-card);
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 8px;
+}
+
+/* Prevent layout shift during animations */
+.animation-container {
+  position: relative;
+}
+
+/* Upload zone background */
+.upload-zone {
+  background: var(--bg-secondary);
+  transition: all 0.2s ease;
+}
+
+/* Ensure all interactive elements have smooth transitions */
+button, a, input, select, textarea {
+  transition: all 0.2s ease;
+}
+
+/* Force GPU acceleration for smoother animations */
+.month-list,
+.settings-section,
+.content-section,
+.chat-msg {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}

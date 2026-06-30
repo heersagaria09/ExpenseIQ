@@ -1,0 +1,152 @@
+/* ===== Smooth Animations CSS ===== */
+
+/* Accordion Animation for Bank Statements */
+.accordion-item {
+  overflow: hidden;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  background: var(--bg-card);
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+.accordion-content.open {
+  max-height: 1000px;
+  opacity: 1;
+  transform: translateY(0);
+  background: var(--bg-card);
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s ease 0.1s,
+              transform 0.3s ease 0.1s;
+}
+
+.accordion-trigger svg {
+  transition: transform 0.3s ease;
+}
+
+.accordion-trigger.expanded svg {
+  transform: rotate(90deg);
+}
+
+/* Smooth Section Switching */
+.content-section {
+  opacity: 1;
+  transform: translateX(0);
+  background: var(--bg-primary);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  position: relative;
+}
+
+.content-section.hidden {
+  opacity: 0;
+  transform: translateX(20px);
+  background: var(--bg-primary);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Message Animations */
+.message-item {
+  opacity: 0;
+  transform: translateY(20px);
+  background: transparent;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.message-item.show {
+  opacity: 1;
+  transform: translateY(0);
+  background: transparent;
+}
+
+/* Loading States */
+.loading-fade {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+/* Hover Effects */
+.smooth-hover {
+  transition: all 0.2s ease;
+}
+
+.smooth-hover:hover {
+  transform: translateY(-1px);
+}
+
+/* Card Animations */
+.card-animate {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-animate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+/* General Animation Classes */
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+.slide-up {
+  animation: slideUp 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Prevent layout shifts during animations */
+.animation-container {
+  position: relative;
+}
+
+.animation-container > * {
+  will-change: transform, opacity;
+}
+
+/* Smooth scrolling */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}

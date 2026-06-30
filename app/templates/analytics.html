@@ -1,0 +1,169 @@
+{% extends "app_base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+{% block page_subtitle %}Deep insights into your finances{% endblock %}
+
+{% block content %}
+<div class="d-flex gap-3 mb-4 flex-wrap">
+  <select class="form-select" id="analyticsYear" style="width:120px;" onchange="reloadAnalytics()">
+    {% for y in range(now().year, now().year-4, -1) %}
+    <option value="{{ y }}" {% if y == data.year %}selected{% endif %}>{{ y }}</option>
+    {% endfor %}
+  </select>
+  <select class="form-select" id="analyticsMonth" style="width:150px;" onchange="reloadAnalytics()">
+    {% for m, name in enumerate(['January','February','March','April','May','June','July','August','September','October','November','December'], 1) %}
+    <option value="{{ m }}" {% if m == data.month %}selected{% endif %}>{{ name }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="content-grid content-grid-2 mb-4">
+  <div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+      <span class="section-card-title">Income vs Expenses ({{ data.year }})</span>
+    </div>
+    <div class="section-card-body" style="background:var(--card-bg);">
+      <div class="chart-wrapper-lg">
+        <canvas id="cashflowChart"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+      <span class="section-card-title">Spending by Category</span>
+    </div>
+    <div class="section-card-body" style="background:var(--card-bg);">
+      {% if data.category_breakdown %}
+      <div class="chart-wrapper">
+        <canvas id="categoryChart"></canvas>
+      </div>
+      {% else %}
+      <div class="empty-state" style="background:var(--card-bg);"><p style="color:var(--text-muted);">No expense data for selected period</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="content-grid content-grid-2 mb-4">
+  <div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+      <span class="section-card-title">Income by Source</span>
+    </div>
+    <div class="section-card-body" style="background:var(--card-bg);">
+      {% if data.source_breakdown %}
+      <div class="chart-wrapper">
+        <canvas id="sourceChart"></canvas>
+      </div>
+      {% else %}
+      <div class="empty-state" style="background:var(--card-bg);"><p style="color:var(--text-muted);">No income data for selected period</p></div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+      <span class="section-card-title">Budget vs Actual Spending</span>
+    </div>
+    <div class="section-card-body" style="background:var(--card-bg);">
+      {% if data.budgets %}
+      <div class="chart-wrapper">
+        <canvas id="budgetChart"></canvas>
+      </div>
+      {% else %}
+      <div class="empty-state" style="background:var(--card-bg);">
+        <p style="color:var(--text-muted);">No budgets set for this period</p>
+        <a href="/budgets" class="btn-primary-custom mt-3" style="font-size:13px;padding:8px 16px;">Set Budgets</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Category Breakdown Table -->
+{% if data.category_breakdown %}
+<div class="section-card mb-4" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+  <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+    <span class="section-card-title">Category Breakdown Details</span>
+  </div>
+  <div class="section-card-body" style="padding:0;background:var(--card-bg);">
+    <table class="table-custom">
+      <thead><tr><th>Category</th><th>Transactions</th><th>Amount</th><th>Share</th></tr></thead>
+      <tbody>
+        {% set total_cat = data.category_breakdown | sum(attribute='total') %}
+        {% for cat in data.category_breakdown %}
+        <tr>
+          <td style="font-weight:600;color:var(--text-primary)">{{ cat._id }}</td>
+          <td style="color:var(--text-muted)">{{ cat.count }}</td>
+          <td style="font-weight:700;color:var(--danger)">₹{{ "{:,.2f}".format(cat.total) }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="progress-custom flex-grow-1">
+                <div class="progress-bar-custom" style="width:{{ ((cat.total/total_cat)*100)|round(0) if total_cat > 0 else 0 }}%"></div>
+              </div>
+              <span style="font-size:12px;color:var(--text-muted);min-width:35px">{{ ((cat.total/total_cat)*100)|round(1) if total_cat > 0 else 0 }}%</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const analyticsData = {{ data | tojson }};
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const catColors = ['#f59e0b','#3b82f6','#8b5cf6','#ef4444','#10b981','#ec4899','#06b6d4','#6b7280','#f97316','#14b8a6'];
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cf = analyticsData.cashflow || [];
+  if (cf.length) {
+    createLineChart(
+      document.getElementById('cashflowChart').getContext('2d'),
+      cf.map(m => m.month),
+      [
+        { label: 'Income', data: cf.map(m => m.income), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)', fill: true, tension: 0.4 },
+        { label: 'Expenses', data: cf.map(m => m.expense), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', fill: true, tension: 0.4 },
+        { label: 'Savings', data: cf.map(m => m.savings), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.05)', fill: true, tension: 0.4 }
+      ]
+    );
+  }
+  const cats = analyticsData.category_breakdown || [];
+  if (cats.length) {
+    createDoughnutChart(
+      document.getElementById('categoryChart').getContext('2d'),
+      cats.map(c => c._id), cats.map(c => c.total), catColors
+    );
+  }
+  const srcs = analyticsData.source_breakdown || [];
+  if (srcs.length) {
+    createBarChart(
+      document.getElementById('sourceChart').getContext('2d'),
+      srcs.map(s => s._id),
+      [{ label: 'Income', data: srcs.map(s => s.total), backgroundColor: catColors }]
+    );
+  }
+  const budgets = analyticsData.budgets || [];
+  if (budgets.length) {
+    createBarChart(
+      document.getElementById('budgetChart').getContext('2d'),
+      budgets.map(b => b.category),
+      [
+        { label: 'Budget', data: budgets.map(b => b.amount), backgroundColor: 'rgba(16,185,129,0.7)' },
+        { label: 'Spent', data: budgets.map(b => b.spent||0), backgroundColor: 'rgba(239,68,68,0.7)' }
+      ]
+    );
+  }
+});
+
+function reloadAnalytics() {
+  const year = document.getElementById('analyticsYear').value;
+  const month = document.getElementById('analyticsMonth').value;
+  window.location.href = `/analytics?year=${year}&month=${month}`;
+}
+</script>
+{% endblock %}

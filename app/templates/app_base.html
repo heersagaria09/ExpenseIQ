@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    /* CRITICAL: Set theme INSTANTLY before ANY rendering */
+    (function() {
+      try {
+        var theme = localStorage.getItem('expenseiq_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch(e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    /* CRITICAL: Pure CSS solution - no flash ever */
+    html, body, .app-body, .main-content, .page-content, .sidebar, .topbar {
+      background-color: #090d18 !important;
+      margin: 0;
+      padding: 0;
+    }
+    html[data-theme="light"], 
+    html[data-theme="light"] body,
+    html[data-theme="light"] .app-body,
+    html[data-theme="light"] .main-content,
+    html[data-theme="light"] .page-content,
+    html[data-theme="light"] .sidebar,
+    html[data-theme="light"] .topbar {
+      background-color: #f0f4f8 !important;
+    }
+    /* Disable ALL transitions during navigation */
+    html.loading * {
+      transition: none !important;
+      animation: none !important;
+    }
+  </style>
+  <title>{% block title %}ExpenseIQ{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet"/>
+  <link href="/static/css/main.css" rel="stylesheet"/>
+  <link href="/static/css/app.css" rel="stylesheet"/>
+  <link href="/static/css/animations.css" rel="stylesheet"/>
+  <style>
+    /* PERMANENT FIX - Override all animations with proper backgrounds */
+    body, .app-body { background: var(--bg-primary) !important; }
+    .month-list { background: var(--bg-card) !important; }
+    .month-list.open { background: var(--bg-card) !important; }
+    .settings-section { background: var(--bg-primary) !important; }
+    .content-section { background: var(--bg-primary) !important; }
+    .year-group { background: var(--bg-card) !important; }
+    #chatMessages { background: var(--bg-card) !important; }
+    .msg-bubble { background: var(--bg-secondary) !important; }
+    .chat-user .msg-bubble { background: rgba(34,197,94,0.15) !important; }
+    .upload-zone { background: var(--bg-secondary) !important; }
+    .main-content { background: var(--bg-primary) !important; }
+    .page-content { background: var(--bg-primary) !important; }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="app-body">
+
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="logo-link d-flex align-items-center gap-2">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="8" fill="#22c55e"/>
+            <rect x="6" y="18" width="4" height="8" rx="1" fill="white"/>
+            <rect x="14" y="12" width="4" height="14" rx="1" fill="white"/>
+            <rect x="22" y="6" width="4" height="20" rx="1" fill="white"/>
+          </svg>
+        </div>
+        <span class="logo-text">Expense<span class="text-primary">IQ</span></span>
+      </a>
+      <button class="sidebar-close d-lg-none" onclick="toggleSidebar()">
+        <i data-lucide="x" class="icon-sm"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-label">Main</span>
+        <a href="/dashboard" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}">
+          <i data-lucide="layout-dashboard" class="nav-icon"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="/expenses" class="nav-item {% if '/expense' in request.path %}active{% endif %}">
+          <i data-lucide="receipt" class="nav-icon"></i>
+          <span>Expenses</span>
+        </a>
+        <a href="/income" class="nav-item {% if '/income' in request.path %}active{% endif %}">
+          <i data-lucide="trending-up" class="nav-icon"></i>
+          <span>Income</span>
+        </a>
+        <a href="/analytics" class="nav-item {% if '/analytics' in request.path %}active{% endif %}">
+          <i data-lucide="bar-chart-3" class="nav-icon"></i>
+          <span>Analytics</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-label">Planning</span>
+        <a href="/budgets" class="nav-item {% if '/budget' in request.path %}active{% endif %}">
+          <i data-lucide="target" class="nav-icon"></i>
+          <span>Budgets</span>
+        </a>
+        <a href="/goals" class="nav-item {% if '/goal' in request.path %}active{% endif %}">
+          <i data-lucide="trophy" class="nav-icon"></i>
+          <span>Goals</span>
+        </a>
+        <a href="/subscriptions" class="nav-item {% if '/subscription' in request.path %}active{% endif %}">
+          <i data-lucide="credit-card" class="nav-icon"></i>
+          <span>Subscriptions</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-label">Tools</span>
+        <a href="/calendar" class="nav-item {% if '/calendar' in request.path %}active{% endif %}">
+          <i data-lucide="calendar" class="nav-icon"></i>
+          <span>Calendar</span>
+        </a>
+        <a href="/bank-statements" class="nav-item {% if '/bank-statement' in request.path %}active{% endif %}">
+          <i data-lucide="landmark" class="nav-icon"></i>
+          <span>Bank Statements</span>
+        </a>
+        <a href="/ai-coach" class="nav-item {% if '/ai-coach' in request.path %}active{% endif %}">
+          <i data-lucide="bot" class="nav-icon"></i>
+          <span>AI Coach</span>
+        </a>
+        <a href="/notifications" class="nav-item {% if '/notification' in request.path %}active{% endif %}">
+          <i data-lucide="bell" class="nav-icon"></i>
+          <span>Notifications</span>
+          {% if unread_count and unread_count > 0 %}
+          <span class="nav-badge">{{ unread_count }}</span>
+          {% endif %}
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-label">Account</span>
+        <a href="/settings" class="nav-item {% if '/settings' in request.path %}active{% endif %}">
+          <i data-lucide="settings" class="nav-icon"></i>
+          <span>Settings</span>
+        </a>
+        <a href="/logout" class="nav-item nav-logout">
+          <i data-lucide="log-out" class="nav-icon"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-mini">
+        <div class="user-avatar-sm">{{ user_name[0]|upper if user_name else 'U' }}</div>
+        <div class="user-mini-info">
+          <div class="user-mini-name">{{ user_name }}</div>
+          <div class="user-mini-email">{{ user_email[:22] ~ '...' if user_email|length > 22 else user_email }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle d-lg-none" onclick="toggleSidebar()">
+          <i data-lucide="menu" class="icon-sm"></i>
+        </button>
+        <div class="page-title">
+          <h1>{% block page_title %}{% endblock %}</h1>
+          <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme">
+          <i data-lucide="moon" class="icon-sm theme-dark-icon"></i>
+          <i data-lucide="sun" class="icon-sm theme-light-icon"></i>
+        </button>
+        <a href="/notifications" class="notif-btn position-relative">
+          <i data-lucide="bell" class="icon-sm"></i>
+          {% if unread_count and unread_count > 0 %}
+          <span class="notif-dot">{{ unread_count }}</span>
+          {% endif %}
+        </a>
+        <div class="profile-dropdown-wrapper">
+          <button class="user-avatar-btn" onclick="toggleProfileDropdown(event)" aria-label="Profile menu">
+            <div class="user-avatar">{{ user_name[0]|upper if user_name else 'U' }}</div>
+          </button>
+          <div class="profile-dropdown" id="profileDropdown">
+            <!-- Profile Header -->
+            <div class="profile-dropdown-header">
+              <div class="profile-dropdown-avatar">{{ user_name[0]|upper if user_name else 'U' }}</div>
+              <div class="profile-dropdown-info">
+                <div class="profile-dropdown-name">{{ user_name }}</div>
+                <div class="profile-dropdown-email">{{ user_email }}</div>
+                <span class="profile-dropdown-badge">Premium User</span>
+              </div>
+            </div>
+            
+            <!-- Menu Items -->
+            <div class="profile-dropdown-menu">
+              <a href="/profile" class="profile-dropdown-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                My Profile
+              </a>
+              <a href="/settings" class="profile-dropdown-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Settings
+              </a>
+              <a href="/settings?tab=appearance" class="profile-dropdown-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                Appearance
+              </a>
+              <a href="/notifications" class="profile-dropdown-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Notifications
+              </a>
+            </div>
+            
+            <!-- Logout Section -->
+            <div class="profile-dropdown-footer">
+              <a href="/logout" class="profile-dropdown-item profile-dropdown-logout">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="page-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<!-- Overlay for mobile sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="/static/js/theme.js"></script>
+<script src="/static/js/main.js"></script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/animations.js"></script>
+{% block extra_js %}{% endblock %}
+<!-- Server-side flash messages -> display as toasts -->
+<script>
+  (function(){
+    try {
+      const flashes = {{ get_flashed_messages(with_categories=True) | tojson }} || [];
+      if (flashes && flashes.length) {
+        // ensure showToast exists
+        flashes.forEach(function(item){
+          try {
+            const cat = item[0] || 'info';
+            const msg = item[1] || item[0] || '';
+            if (typeof showToast === 'function') showToast(msg, cat, 5000);
+          } catch(e){}
+        });
+      }
+    } catch(e){}
+  })();
+</script>
+<script>
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof AOS !== 'undefined') AOS.init({ duration: 400, once: true });
+</script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+{% extends "app_base.html" %}
+{% block title %}Bank Statements{% endblock %}
+{% block page_title %}Bank Statements{% endblock %}
+{% block page_subtitle %}Import and manage your bank statements{% endblock %}
+
+{% block content %}
+<div class="content-grid" style="grid-template-columns:280px 1fr;gap:20px;">
+  <!-- Sidebar Year/Month Navigator -->
+  <div class="section-card" style="height:fit-content;background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);"><span class="section-card-title">Statements</span></div>
+    <div class="section-card-body" style="padding:8px;background:var(--card-bg);">
+      {% for year in years %}
+      <div class="year-group">
+        <button class="year-toggle accordion-trigger {% if year == current_year %}expanded{% endif %}" onclick="smoothToggle('year-btn-{{ year }}', 'year-{{ year }}')" id="year-btn-{{ year }}" style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          {{ year }}
+        </button>
+        <div class="month-list accordion-content {% if year == current_year %}open{% endif %}" id="year-{{ year }}" style="background:var(--card-bg);">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px;">
+            {% for m_idx in range(1, 13) %}
+            {% set has_stmt = (year, m_idx) in stmt_map %}
+            <button class="month-btn {% if has_stmt %}has-stmt{% endif %} {% if year == current_year and m_idx == current_month %}active{% endif %}"
+                    onclick="loadStatement({{ year }}, {{ m_idx }})" style="background:var(--bg-input);color:var(--text-secondary);border:1px solid var(--border-color);margin-bottom:0;">
+              <span>{{ months[m_idx-1] }}</span>
+              {% if has_stmt %}<span class="month-uploaded" style="color:var(--accent);">✓</span>{% endif %}
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Main Statement View -->
+  <div>
+    <div class="section-card mb-4" id="uploadCard" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+      <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+        <span class="section-card-title" id="stmtTitle">Select a Month</span>
+        <div class="d-flex gap-2" id="stmtActions" style="display:none!important;">
+          <button class="btn-outline-custom" style="padding:6px 14px;font-size:13px;" onclick="analyzeStatement()">AI Analyze</button>
+          <button class="btn-outline-custom" style="padding:6px 14px;font-size:13px;color:var(--danger);border-color:var(--danger);" onclick="deleteStatement()">Delete</button>
+        </div>
+      </div>
+      <div class="section-card-body" style="background:var(--card-bg);">
+        <div id="uploadArea">
+          <div class="upload-zone" onclick="document.getElementById('stmtFile').click()" id="uploadZone" style="background:var(--bg-input);border:2px dashed var(--border-color);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p style="color:var(--text-secondary);">Upload Bank Statement</p>
+            <small style="color:var(--text-muted);">Drag & drop your file here or click to browse</small>
+            <small style="margin-top:4px;color:var(--text-muted);">PDF / CSV supported</small>
+            <input type="file" id="stmtFile" accept=".pdf,.csv" style="display:none;" onchange="handleFileSelect(event)"/>
+          </div>
+          <div style="margin-top:12px;">
+            <div style="position:relative;">
+              <input type="password" id="pdfPassword" placeholder="PDF password (if protected)" style="width:100%;padding:10px 14px;padding-right:40px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color);border-radius:var(--radius);font-size:13px;" autocomplete="off" onkeypress="handlePasswordKeypress(event)"/>
+              <button type="button" onclick="togglePasswordVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;">
+                <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg id="eyeOffIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+            <small style="color:var(--text-muted);font-size:11px;">Required for password-protected PDFs</small>
+            <button id="uploadBtn" onclick="uploadWithPassword()" style="margin-top:10px;width:100%;padding:10px;background:var(--primary);color:white;border:none;border-radius:var(--radius);cursor:pointer;font-size:14px;display:none;">Upload & Process</button>
+          </div>
+        </div>
+        <div id="stmtInfo" style="display:none;"></div>
+        <div id="analysisResult" style="display:none;" class="mt-4"></div>
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="section-card" id="txnCard" style="display:none;background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+      <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+        <span class="section-card-title">Extracted Transactions</span>
+        <span class="badge-info" id="txnCount"></span>
+      </div>
+      <div class="section-card-body" style="padding:0;background:var(--card-bg);">
+        <div id="txnList"></div>
+      </div>
+    </div>
+
+    <!-- Recent Uploads -->
+    {% if statements %}
+    <div class="section-card mt-4" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+      <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);"><span class="section-card-title">Recent Imports</span></div>
+      <div class="section-card-body" style="padding:0;background:var(--card-bg);">
+        {% for s in statements[:5] %}
+        <div class="txn-row" style="padding:14px 20px;background:var(--card-bg);border-bottom:1px solid var(--border-color);" onclick="loadStatement({{ s.year }}, {{ s.month }})">
+          <div class="txn-icon" style="background:rgba(59,130,246,0.1);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          </div>
+          <div class="txn-info">
+            <div class="txn-title" style="color:var(--text-primary);">{{ months[s.month-1] }} {{ s.year }} Statement</div>
+            <div class="txn-meta" style="color:var(--text-muted);">{{ s.uploaded_str if s.uploaded_str else 'Uploaded' }} • {{ s.file_type|upper }}</div>
+          </div>
+          <span class="badge-success">{{ s.summary.transaction_count if s.summary else 0 }} txns</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentYear = {{ current_year }};
+let currentMonth = {{ current_month }};
+let currentStmtId = null;
+const months = {{ months | tojson }};
+
+// Remove the old toggleYear function since we're using smoothToggle now
+
+async function loadStatement(year, month) {
+  currentYear = year; currentMonth = month;
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('stmtTitle').textContent = `${months[month-1]} ${year}`;
+  try {
+    const res = await fetch(`/api/statements/${year}/${month}`);
+    const data = await res.json();
+    if (data.success) {
+      const s = data.data;
+      currentStmtId = s._id;
+      showStmtInfo(s);
+      if (s.transactions && s.transactions.length) showTransactions(s.transactions);
+      document.getElementById('stmtActions').style.display = 'flex';
+    } else {
+      showUploadArea();
+      document.getElementById('stmtActions').style.display = 'none';
+    }
+  } catch(e) { showUploadArea(); }
+}
+
+function showUploadArea() {
+  document.getElementById('uploadArea').style.display = 'block';
+  document.getElementById('stmtInfo').style.display = 'none';
+  document.getElementById('txnCard').style.display = 'none';
+  document.getElementById('analysisResult').style.display = 'none';
+  currentStmtId = null;
+}
+
+function showStmtInfo(s) {
+  document.getElementById('uploadArea').style.display = 'none';
+  const summary = s.summary || {};
+  document.getElementById('stmtInfo').style.display = 'block';
+  document.getElementById('stmtInfo').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;">
+      <div class="stat-card" style="padding:16px;"><div class="stat-label">Total Credits</div><div class="stat-number" style="font-size:22px;color:var(--primary)">₹${(summary.total_credits||0).toLocaleString('en-IN')}</div></div>
+      <div class="stat-card" style="padding:16px;"><div class="stat-label">Total Debits</div><div class="stat-number" style="font-size:22px;color:var(--danger)">₹${(summary.total_debits||0).toLocaleString('en-IN')}</div></div>
+      <div class="stat-card" style="padding:16px;"><div class="stat-label">Net</div><div class="stat-number" style="font-size:22px;color:${summary.net>=0?'var(--primary)':'var(--danger)'}">₹${(summary.net||0).toLocaleString('en-IN')}</div></div>
+      <div class="stat-card" style="padding:16px;"><div class="stat-label">Transactions</div><div class="stat-number" style="font-size:22px;">${summary.transaction_count||0}</div></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-outline-custom" onclick="replaceStatement()" style="padding:8px 16px;font-size:13px;">Replace File</button>
+    </div>
+  `;
+}
+
+function showTransactions(txns) {
+  const card = document.getElementById('txnCard');
+  card.style.display = 'block';
+  document.getElementById('txnCount').textContent = `${txns.length} transactions`;
+  const catColors = {'Food & Dining':'#f59e0b','Transportation':'#3b82f6','Shopping':'#8b5cf6','Bills & Utilities':'#ef4444','Entertainment':'#ec4899','Others':'#6b7280'};
+  document.getElementById('txnList').innerHTML = `
+    <table class="table-custom"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Type</th></tr></thead>
+    <tbody>${txns.slice(0,50).map(t => `<tr>
+      <td style="font-size:12px">${t.date}</td>
+      <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.description}</td>
+      <td><span style="background:${catColors[t.category]||'#6b7280'}22;color:${catColors[t.category]||'#6b7280'};padding:2px 8px;border-radius:4px;font-size:11px;">${t.category||'Others'}</span></td>
+      <td style="font-weight:700;color:${t.type==='credit'?'var(--primary)':'var(--danger)'}">₹${(t.amount||0).toLocaleString('en-IN')}</td>
+      <td><span class="badge-${t.type==='credit'?'success':'danger'}">${t.type}</span></td>
+    </tr>`).join('')}</tbody></table>
+    ${txns.length > 50 ? `<div style="padding:12px 20px;color:var(--text-muted);font-size:13px;">Showing 50 of ${txns.length} transactions</div>` : ''}
+  `;
+}
+
+let selectedFile = null;
+
+function handleFileSelect(event) {
+  selectedFile = event.target.files[0];
+  if (selectedFile) {
+    document.getElementById('uploadBtn').style.display = 'block';
+    document.getElementById('uploadZone').innerHTML = `
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p style="color:var(--text-primary);font-weight:600;">${selectedFile.name}</p>
+      <small style="color:var(--text-muted);">Enter password if protected, then click Upload</small>
+    `;
+  }
+}
+
+function handlePasswordKeypress(event) {
+  if (event.key === 'Enter') {
+    uploadWithPassword();
+  }
+}
+
+function togglePasswordVisibility() {
+  const passwordInput = document.getElementById('pdfPassword');
+  const eyeIcon = document.getElementById('eyeIcon');
+  const eyeOffIcon = document.getElementById('eyeOffIcon');
+  
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    eyeIcon.style.display = 'none';
+    eyeOffIcon.style.display = 'block';
+  } else {
+    passwordInput.type = 'password';
+    eyeIcon.style.display = 'block';
+    eyeOffIcon.style.display = 'none';
+  }
+}
+
+async function uploadWithPassword() {
+  if (!selectedFile) {
+    showToast('Please select a file first', 'error');
+    return;
+  }
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+  formData.append('year', currentYear);
+  formData.append('month', currentMonth);
+  const password = document.getElementById('pdfPassword').value;
+  if (password) formData.append('password', password);
+  document.getElementById('uploadZone').innerHTML = '<div class="loading-spinner"></div>';
+  document.getElementById('uploadBtn').style.display = 'none';
+  try {
+    const res = await fetch('/api/statements/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      document.getElementById('pdfPassword').value = '';
+      selectedFile = null;
+      await loadStatement(currentYear, currentMonth);
+    } else {
+      showToast(data.message, 'error');
+      // Reset UI on error
+      document.getElementById('uploadZone').innerHTML = `
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p style="color:var(--text-secondary);">Upload Bank Statement</p>
+        <small style="color:var(--text-muted);">Drag & drop your file here or click to browse</small>
+        <small style="margin-top:4px;color:var(--text-muted);">PDF / CSV supported</small>
+        <input type="file" id="stmtFile" accept=".pdf,.csv" style="display:none;" onchange="handleFileSelect(event)"/>
+      `;
+      document.getElementById('uploadBtn').style.display = 'block';
+    }
+  } catch(e) {
+    showToast('Upload failed', 'error');
+    document.getElementById('uploadZone').innerHTML = `
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p style="color:var(--text-secondary);">Upload Bank Statement</p>
+      <small style="color:var(--text-muted);">Drag & drop your file here or click to browse</small>
+      <small style="margin-top:4px;color:var(--text-muted);">PDF / CSV supported</small>
+      <input type="file" id="stmtFile" accept=".pdf,.csv" style="display:none;" onchange="handleFileSelect(event)"/>
+    `;
+    document.getElementById('uploadBtn').style.display = 'block';
+  }
+  document.getElementById('stmtFile').value = '';
+}
+
+async function uploadStatement(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('year', currentYear);
+  formData.append('month', currentMonth);
+  const password = document.getElementById('pdfPassword').value;
+  if (password) formData.append('password', password);
+  document.getElementById('uploadZone').innerHTML = '<div class="loading-spinner"></div>';
+  try {
+    const res = await fetch('/api/statements/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      document.getElementById('pdfPassword').value = '';
+      await loadStatement(currentYear, currentMonth);
+    } else { showToast(data.message, 'error'); }
+  } catch(e) { showToast('Upload failed', 'error'); }
+  event.target.value = '';
+}
+
+function replaceStatement() { document.getElementById('stmtFile').click(); }
+
+async function deleteStatement() {
+  if (!currentStmtId || !confirm('Delete this statement?')) return;
+  const res = await fetch(`/api/statements/${currentStmtId}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.success) { showToast('Statement deleted', 'success'); showUploadArea(); setTimeout(() => location.reload(), 1000); }
+}
+
+async function analyzeStatement() {
+  if (!currentStmtId) return showToast('No statement loaded', 'error');
+  const analysisDiv = document.getElementById('analysisResult');
+  analysisDiv.style.display = 'block';
+  analysisDiv.innerHTML = '<div class="loading-spinner"></div><p style="text-align:center;color:var(--text-muted)">AI is analyzing your statement...</p>';
+  try {
+    const res = await fetch(`/api/statements/${currentStmtId}/analyze`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      analysisDiv.innerHTML = `<div class="section-card" style="border-color:rgba(34,197,94,0.3);">
+        <div class="section-card-header"><span class="section-card-title">AI Analysis — ${data.data.month}</span><span class="badge-success">Gemini AI</span></div>
+        <div class="section-card-body"><div style="font-size:14px;color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;">${data.data.analysis}</div></div>
+      </div>`;
+    } else { analysisDiv.innerHTML = `<p style="color:var(--danger)">Analysis failed: ${data.message}</p>`; }
+  } catch(e) { analysisDiv.innerHTML = '<p style="color:var(--danger)">Analysis failed</p>'; }
+}
+
+// Auto-load current month on page load
+document.addEventListener('DOMContentLoaded', () => { loadStatement({{ current_year }}, {{ current_month }}); });
+</script>
+<style>
+.year-group {
+  margin-bottom: 8px;
+  background: var(--card-bg);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+.year-toggle {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.year-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.year-toggle svg {
+  transition: transform 0.25s ease;
+  transform: rotate(0deg);
+}
+.year-toggle.expanded svg {
+  transform: rotate(90deg);
+}
+
+/* Accordion Animation */
+.month-list {
+  padding-left: 8px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--card-bg);
+}
+
+.month-list > div {
+  overflow: hidden;
+}
+
+.month-list.open {
+  grid-template-rows: 1fr;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  background: var(--card-bg);
+}
+
+.month-btn {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s;
+  text-align: center;
+}
+.month-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+.month-btn.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+  font-weight: 600;
+  border-color: var(--accent);
+}
+.month-btn.has-stmt {
+  color: var(--text-secondary);
+}
+.month-uploaded {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.upload-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius);
+  padding: 50px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-muted);
+  background: var(--bg-input);
+}
+.upload-zone:hover {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  transform: translateY(-2px);
+}
+.upload-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  transform: scale(1.02);
+}
+.upload-zone p {
+  margin: 12px 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.upload-zone small {
+  display: block;
+  font-size: 12px;
+}
+</style>
+{% endblock %}

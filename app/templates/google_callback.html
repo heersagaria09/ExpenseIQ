@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Google Sign-In Callback</title>
+  </head>
+  <body>
+    <script>
+      // This page is used as the OAuth redirect target. Google will return an id_token
+      // in the URL fragment when using response_type=id_token. We extract it and POST
+      // it back to the application API, then notify the opener window.
+      (function(){
+        function parseFragment(hash) {
+          if (!hash) return {};
+          return hash.substring(1).split('&').reduce(function(acc, part){
+            var kv = part.split('='); acc[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]||''); return acc;
+          }, {});
+        }
+        const params = parseFragment(location.hash);
+        const id_token = params['id_token'] || params['access_token'] || '';
+        if (!id_token) {
+          // notify opener of failure
+          try { window.opener.postMessage({ success: false, message: 'No token returned' }, location.origin); } catch(e){}
+          window.close();
+        } else {
+          fetch('/api/auth/google', {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ token: id_token })
+          }).then(r=>r.json()).then(data=>{
+            try { window.opener.postMessage({ success: data.success, payload: data }, location.origin); } catch(e){}
+            window.close();
+          }).catch(err=>{ try { window.opener.postMessage({ success:false, message: 'Network error' }, location.origin); }catch(e){}; window.close(); });
+        }
+      })();
+    </script>
+  </body>
+</html>

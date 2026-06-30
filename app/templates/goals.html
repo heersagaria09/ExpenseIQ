@@ -1,0 +1,191 @@
+{% extends "app_base.html" %}
+{% block title %}Goals{% endblock %}
+{% block page_title %}Goals{% endblock %}
+{% block page_subtitle %}Save for what matters to you{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <span class="badge-success me-2">{{ goals|length }} Active</span>
+    {% if completed_goals %}<span class="badge-info">{{ completed_goals|length }} Completed</span>{% endif %}
+  </div>
+  <button class="btn-primary-custom" onclick="openGoalModal()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Create New Goal
+  </button>
+</div>
+
+{% if goals %}
+<div class="content-grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:28px;">
+  {% for g in goals %}
+  <div class="section-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);">
+    <div class="section-card-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+      <div>
+        <div style="font-weight:700;color:var(--text-primary);font-size:16px;">{{ g.title }}</div>
+        <div style="font-size:12px;color:var(--text-muted)">{{ g.category }}</div>
+      </div>
+      <span class="badge-{% if g.progress_pct >= 100 %}success{% elif g.progress_pct >= 50 %}info{% else %}warning{% endif %}">{{ g.progress_pct }}%</span>
+    </div>
+    <div class="section-card-body" style="background:var(--card-bg);">
+      <div class="d-flex justify-content-between mb-2">
+        <span style="font-size:13px;color:var(--text-muted)">Saved</span>
+        <span style="font-weight:700;color:var(--accent)">₹{{ "{:,.0f}".format(g.current_amount) }}</span>
+      </div>
+      <div class="d-flex justify-content-between mb-3">
+        <span style="font-size:13px;color:var(--text-muted)">Target</span>
+        <span style="font-weight:700;color:var(--text-primary)">₹{{ "{:,.0f}".format(g.target_amount) }}</span>
+      </div>
+      <div class="progress-custom mb-3">
+        <div class="progress-bar-custom" style="width:{{ [g.progress_pct, 100]|min }}%;background:{% if g.progress_pct >= 100 %}var(--accent){% elif g.progress_pct >= 50 %}var(--info){% else %}var(--warning){% endif %}"></div>
+      </div>
+      {% if g.target_date %}
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+        Target: {{ g.target_date.strftime('%d %b %Y') if g.target_date else 'Not set' }}
+      </div>
+      {% endif %}
+      <div class="d-flex gap-2">
+        <button onclick="openContributeModal('{{ g._id }}','{{ g.title }}')" class="btn-primary-custom flex-grow-1" style="padding:8px;font-size:13px;">+ Add Savings</button>
+        <button onclick="deleteGoal('{{ g._id }}')" style="background:rgba(239,68,68,0.1);border:none;color:#ef4444;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;">Delete</button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="section-card mb-4" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);"><div class="section-card-body" style="background:var(--card-bg);"><div class="empty-state">
+  <div class="empty-icon" style="background:var(--bg-hover);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+  <p style="color:var(--text-muted);">No goals yet. Start saving for something meaningful!</p>
+  <button class="btn-primary-custom mt-3" onclick="openGoalModal()">Create First Goal</button>
+</div></div></div>
+{% endif %}
+
+{% if completed_goals %}
+<h3 style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:16px;">✅ Completed Goals</h3>
+<div class="content-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+  {% for g in completed_goals %}
+  <div class="stat-card" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-sm);border-color:rgba(16,185,129,0.3);">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div style="font-weight:700;color:var(--text-primary)">{{ g.title }}</div>
+        <div style="font-size:12px;color:var(--accent)">✓ Achieved ₹{{ "{:,.0f}".format(g.target_amount) }}</div>
+      </div>
+      <span class="badge-success">100%</span>
+    </div>
+    <div class="progress-custom mt-2"><div class="progress-bar-custom" style="width:100%"></div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Create Goal Modal -->
+<div class="modal fade" id="goalModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);">
+      <div class="modal-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+        <h5 class="modal-title" style="color:var(--text-primary);">Create New Goal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" style="color:var(--text-muted);"></button>
+      </div>
+      <div class="modal-body" style="background:var(--card-bg);">
+        <div class="mb-3">
+          <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Goal Name *</label>
+          <input type="text" id="goalTitle" class="form-control" placeholder="e.g. Emergency Fund, Laptop" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Category</label>
+          <select id="goalCategory" class="form-select" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);">
+            {% for cat in categories %}<option value="{{ cat }}">{{ cat }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Target Amount (₹) *</label>
+            <input type="number" id="goalTarget" class="form-control" placeholder="0.00" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+          </div>
+          <div class="col-6">
+            <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Target Date</label>
+            <input type="date" id="goalDate" class="form-control" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" style="color:var(--text-secondary);font-size:13px;">Notes</label>
+          <textarea id="goalNotes" class="form-control" rows="2" placeholder="Why this goal matters..." style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" style="background:var(--card-bg);border-top:1px solid var(--border-color);">
+        <button class="btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn-primary-custom" onclick="saveGoal()">Create Goal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contribute Modal -->
+<div class="modal fade" id="contributeModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius);">
+      <div class="modal-header" style="background:var(--card-bg);border-bottom:1px solid var(--border-color);">
+        <h5 class="modal-title" style="color:var(--text-primary);">Add Savings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" style="color:var(--text-muted);"></button>
+      </div>
+      <div class="modal-body" style="background:var(--card-bg);">
+        <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Adding savings to: <strong id="contributeGoalName" style="color:var(--text-primary);"></strong></p>
+        <input type="number" id="contributeAmount" class="form-control" placeholder="Amount (₹)" style="background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);"/>
+      </div>
+      <div class="modal-footer" style="background:var(--card-bg);border-top:1px solid var(--border-color);">
+        <button class="btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn-primary-custom" onclick="submitContribution()">Add Savings</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let goalModal, contributeModal, currentGoalId;
+document.addEventListener('DOMContentLoaded', () => {
+  goalModal = new bootstrap.Modal(document.getElementById('goalModal'));
+  contributeModal = new bootstrap.Modal(document.getElementById('contributeModal'));
+});
+
+function openGoalModal() { goalModal.show(); }
+
+function openContributeModal(id, name) {
+  currentGoalId = id;
+  document.getElementById('contributeGoalName').textContent = name;
+  document.getElementById('contributeAmount').value = '';
+  contributeModal.show();
+}
+
+async function saveGoal() {
+  const body = {
+    title: document.getElementById('goalTitle').value.trim(),
+    category: document.getElementById('goalCategory').value,
+    target_amount: parseFloat(document.getElementById('goalTarget').value),
+    target_date: document.getElementById('goalDate').value,
+    notes: document.getElementById('goalNotes').value.trim(),
+  };
+  if (!body.title || !body.target_amount) return showToast('Name and target amount required', 'error');
+  const res = await fetch('/api/goals', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (data.success) { showToast(data.message, 'success'); goalModal.hide(); setTimeout(() => location.reload(), 800); }
+  else showToast(data.message||'Failed', 'error');
+}
+
+async function submitContribution() {
+  const amount = parseFloat(document.getElementById('contributeAmount').value);
+  if (!amount || amount <= 0) return showToast('Enter a valid amount', 'error');
+  const res = await fetch(`/api/goals/${currentGoalId}/contribute`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({amount}) });
+  const data = await res.json();
+  if (data.success) { showToast(data.message, 'success'); contributeModal.hide(); setTimeout(() => location.reload(), 800); }
+  else showToast(data.message||'Failed', 'error');
+}
+
+async function deleteGoal(id) {
+  if (!confirm('Delete this goal?')) return;
+  const res = await fetch(`/api/goals/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.success) { showToast('Goal deleted', 'success'); setTimeout(() => location.reload(), 800); }
+}
+</script>
+{% endblock %}
