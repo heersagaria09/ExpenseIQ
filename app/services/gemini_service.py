@@ -1,5 +1,6 @@
 import os
-import google.generativeai as genai
+import google
+from google import genai
 from datetime import datetime
 
 
@@ -7,13 +8,13 @@ def get_gemini_model():
     api_key = os.environ.get('GEMINI_API_KEY', '')
     if not api_key:
         return None
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel('gemini-1.5-flash')
+    client = genai.Client(api_key=api_key)
+    return client
 
 
 def analyze_finances(user_data, question):
-    model = get_gemini_model()
-    if not model:
+    client = get_gemini_model()
+    if not client:
         return None, 'Gemini API key not configured'
     try:
         now = datetime.utcnow()
@@ -40,15 +41,18 @@ Provide specific, actionable financial advice based on the actual data above.
 Use ₹ (Indian Rupee) for all amounts. Be concise and practical. 
 Do not make up data that isn't provided. Focus on real insights from the numbers shown.
 """
-        response = model.generate_content(context)
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=context
+        )
         return response.text, None
     except Exception as e:
         return None, str(e)
 
 
 def analyze_bank_statement(statement_text, month_name):
-    model = get_gemini_model()
-    if not model:
+    client = get_gemini_model()
+    if not client:
         return None, 'Gemini API key not configured'
     try:
         prompt = f"""
@@ -64,15 +68,18 @@ Statement content:
 
 Use ₹ (Indian Rupees). Be specific and data-driven.
 """
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt
+        )
         return response.text, None
     except Exception as e:
         return None, str(e)
 
 
 def get_budget_recommendations(budget_data, expense_data):
-    model = get_gemini_model()
-    if not model:
+    client = get_gemini_model()
+    if not client:
         return None, 'Gemini API key not configured'
     try:
         prompt = f"""
@@ -85,15 +92,18 @@ Provide 3 specific budget recommendations to improve financial health.
 Focus on overspending areas and optimization opportunities.
 Keep it concise and actionable.
 """
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt
+        )
         return response.text, None
     except Exception as e:
         return None, str(e)
 
 
 def get_goal_forecast(goal_data, monthly_savings):
-    model = get_gemini_model()
-    if not model:
+    client = get_gemini_model()
+    if not client:
         return None, 'Gemini API key not configured'
     try:
         prompt = f"""
@@ -108,7 +118,10 @@ Target Date: {goal_data.get('target_date', 'Not set')}
 
 Provide a realistic achievement timeline and 2-3 tips to reach this goal faster.
 """
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt
+        )
         return response.text, None
     except Exception as e:
         return None, str(e)
