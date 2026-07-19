@@ -57,6 +57,7 @@ temp/
 tmp/
 
 # OS generated files
+desktop.ini
 .DS_Store
 .DS_Store?
 ._*
