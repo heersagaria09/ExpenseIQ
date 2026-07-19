@@ -1,4 +1,4 @@
-﻿# ExpenseIQ 💰
+# ExpenseIQ 💰
 
 A modern, AI-powered personal finance management application built with Flask and Google Gemini. Track expenses, manage budgets, analyze spending patterns, and get personalized financial coaching.
 
@@ -29,44 +29,70 @@ A modern, AI-powered personal finance management application built with Flask an
 
 ## 📋 Prerequisites
 
-- Python 3.8 or higher
-- MongoDB instance (local or cloud)
-- Google Generative AI API key
+- Python 3.8 or higher (3.10–3.12 recommended)
+- Google Generative AI API key (optional — only needed for AI features)
+- MongoDB instance (optional — the app falls back to a local file-backed database if no `MONGO_URI` is set)
 
 ## 🚀 How to Run
 
 1. Clone the repository:
-`ash
+
+```bash
 git clone https://github.com/heersagaria09/ExpenseIQ.git
 cd ExpenseIQ
-`
+```
 
-2. Create virtual environment:
-`ash
+2. Create and activate a virtual environment:
+
+```bash
 python -m venv .venv
-.venv\Scripts\activate  # Windows
-source .venv/bin/activate  # macOS/Linux
-`
+
+# Windows (PowerShell / VS Code terminal)
+.venv\Scripts\activate
+
+# macOS / Linux
+source .venv/bin/activate
+```
 
 3. Install dependencies:
-`ash
-pip install -r requirements.txt
-`
 
-4. Create .env file with your configuration:
-`env
-GEMINI_API_KEY=your-api-key
+```bash
+pip install -r requirements.txt
+```
+
+4. Create your `.env` file (optional but recommended). Copy the example and edit the values:
+
+```bash
+# Windows
+copy .env.example .env
+
+# macOS / Linux
+cp .env.example .env
+```
+
+The app runs without a `.env` using sensible defaults and a local database. Set these keys to enable full functionality:
+
+```env
+GEMINI_API_KEY=your-google-gemini-api-key
 MONGO_URI=mongodb://localhost:27017/expenseiq
-SECRET_KEY=your-secret-key
-JWT_SECRET_KEY=your-jwt-secret
-`
+SECRET_KEY=change-this-in-production
+JWT_SECRET_KEY=change-this-in-production
+```
 
 5. Run the application:
-`ash
+
+```bash
 python app.py
-`
+```
 
 Open http://localhost:5000 in your browser.
+
+## 🩺 Troubleshooting (VS Code / fresh download)
+
+- **Select the right interpreter**: after creating `.venv`, in VS Code run `Python: Select Interpreter` and choose the `.venv` interpreter so the integrated terminal and IntelliSense use it.
+- **`pip install` succeeds but the app can't find packages**: make sure the virtual environment is activated (your terminal prompt should show `(.venv)`).
+- **No MongoDB installed**: that's fine — leave `MONGO_URI` empty and the app uses a local file-backed database (`app/data/mockdb.json`).
+- **AI features disabled**: set `GEMINI_API_KEY` in `.env`. Without it the app still runs; only AI-powered features are unavailable.
 
 ## 📝 License
 
